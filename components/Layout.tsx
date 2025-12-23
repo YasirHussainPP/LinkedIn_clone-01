@@ -7,12 +7,13 @@ interface LayoutProps {
   children: React.ReactNode;
   currentPage: Page;
   setCurrentPage: (page: Page) => void;
+  onLogout: () => void;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, currentPage, setCurrentPage }) => {
+const Layout: React.FC<LayoutProps> = ({ children, currentPage, setCurrentPage, onLogout }) => {
   return (
     <div className="min-h-screen">
-      <Header currentPage={currentPage} setCurrentPage={setCurrentPage} />
+      <Header currentPage={currentPage} setCurrentPage={setCurrentPage} onLogout={onLogout} />
       <main className="max-w-6xl mx-auto pt-20 px-4 md:px-6 pb-12">
         {children}
       </main>

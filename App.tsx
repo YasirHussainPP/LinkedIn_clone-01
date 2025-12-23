@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from './components/Layout';
 import Sidebar from './components/Sidebar';
 import Feed from './components/Feed';
@@ -9,10 +9,30 @@ import ProfilePage from './components/ProfilePage';
 import NetworkPage from './components/NetworkPage';
 import MessagingPage from './components/MessagingPage';
 import NotificationsPage from './components/NotificationsPage';
+import LoginPage from './components/Auth/LoginPage';
+import RegisterPage from './components/Auth/RegisterPage';
 import { Page } from './types';
+import { storage, STORAGE_KEYS } from './services/storage';
 
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>(Page.HOME);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [authView, setAuthView] = useState<'login' | 'register'>('login');
+
+  useEffect(() => {
+    const isAuth = storage.load<boolean>(STORAGE_KEYS.AUTH_TOKEN, false);
+    setIsAuthenticated(isAuth);
+  }, []);
+
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
+    setCurrentPage(Page.HOME);
+  };
+
+  const handleLogout = () => {
+    storage.remove(STORAGE_KEYS.AUTH_TOKEN);
+    setIsAuthenticated(false);
+  };
 
   const renderContent = () => {
     switch (currentPage) {
@@ -55,26 +75,30 @@ const App: React.FC = () => {
           </div>
         );
       default:
-        return (
-          <div className="flex flex-col items-center justify-center h-[60vh] text-center p-8 bg-white rounded-lg border border-gray-200">
-            <div className="text-4xl mb-4">🚧</div>
-            <h2 className="text-2xl font-bold text-gray-900">Coming Soon</h2>
-            <p className="text-gray-500 mt-2 max-w-md">
-              We're polishing this feature for the best professional experience.
-            </p>
-            <button 
-              onClick={() => setCurrentPage(Page.HOME)}
-              className="mt-6 bg-blue-600 text-white font-bold px-6 py-2 rounded-full hover:bg-blue-700 transition-colors"
-            >
-              Back to Home
-            </button>
-          </div>
-        );
+        return null;
     }
   };
 
+  if (!isAuthenticated) {
+    return authView === 'login' ? (
+      <LoginPage 
+        onLoginSuccess={handleLoginSuccess} 
+        onSwitchToRegister={() => setAuthView('register')} 
+      />
+    ) : (
+      <RegisterPage 
+        onRegisterSuccess={handleLoginSuccess} 
+        onSwitchToLogin={() => setAuthView('login')} 
+      />
+    );
+  }
+
   return (
-    <Layout currentPage={currentPage} setCurrentPage={setCurrentPage}>
+    <Layout 
+      currentPage={currentPage} 
+      setCurrentPage={setCurrentPage}
+      onLogout={handleLogout}
+    >
       {renderContent()}
     </Layout>
   );
