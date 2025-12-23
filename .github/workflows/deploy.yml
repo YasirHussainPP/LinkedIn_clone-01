@@ -1,4 +1,3 @@
-
 name: Deploy to GitHub Pages
 
 on:
@@ -19,7 +18,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          # Removed cache: 'npm' to avoid error when package-lock.json is missing
 
       - name: Install dependencies
         run: npm install
@@ -27,7 +26,6 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          # If you have an API key for Gemini, add it to your Repo Secrets as API_KEY
           API_KEY: ${{ secrets.API_KEY }}
 
       - name: Deploy to GitHub Pages
