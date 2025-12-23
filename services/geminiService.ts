@@ -1,14 +1,26 @@
-
 import { GoogleGenAI } from "@google/genai";
 
-// Always use const ai = new GoogleGenAI({apiKey: process.env.API_KEY});
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 export class GeminiService {
+  private ai: GoogleGenAI | null = null;
+
+  private getClient() {
+    if (!this.ai) {
+      const apiKey = process.env.API_KEY;
+      if (!apiKey || apiKey === 'undefined') {
+        console.warn("Gemini API Key is missing. AI features will be disabled.");
+        return null;
+      }
+      this.ai = new GoogleGenAI({ apiKey });
+    }
+    return this.ai;
+  }
+
   async generatePostImprovement(currentContent: string) {
+    const client = this.getClient();
+    if (!client) return "AI features are currently unavailable. Please check your API key.";
+
     try {
-      // Use ai.models.generateContent to query GenAI with both the model name and prompt.
-      const response = await ai.models.generateContent({
+      const response = await client.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: `I have a LinkedIn post draft: "${currentContent}". 
         Please rewrite it to be more professional, engaging, and suitable for a LinkedIn audience. 
@@ -18,7 +30,6 @@ export class GeminiService {
             topP: 0.95,
         }
       });
-      // Access the .text property directly (not as a method).
       return response.text || "Could not generate improvement.";
     } catch (error) {
       console.error("Gemini Error:", error);
@@ -27,21 +38,22 @@ export class GeminiService {
   }
 
   async generateProfileSummary(experience: string) {
-      try {
-        // Use ai.models.generateContent to query GenAI with both the model name and prompt.
-        const response = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
-            contents: `Based on the following experience: "${experience}", write a compelling 3-sentence LinkedIn "About" section summary. Use professional keywords.`,
-            config: {
-                temperature: 0.8,
-            }
-        });
-        // Access the .text property directly (not as a method).
-        return response.text || "Could not generate summary.";
-      } catch (error) {
-          console.error("Gemini Error:", error);
-          return "An error occurred while generating the summary.";
-      }
+    const client = this.getClient();
+    if (!client) return "AI features are currently unavailable.";
+
+    try {
+      const response = await client.models.generateContent({
+          model: 'gemini-3-flash-preview',
+          contents: `Based on the following experience: "${experience}", write a compelling 3-sentence LinkedIn "About" section summary. Use professional keywords.`,
+          config: {
+              temperature: 0.8,
+          }
+      });
+      return response.text || "Could not generate summary.";
+    } catch (error) {
+        console.error("Gemini Error:", error);
+        return "An error occurred while generating the summary.";
+    }
   }
 }
 
